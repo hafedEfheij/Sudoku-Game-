@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         notesToggleBtn.addEventListener('click', () => {
             notesMode = !notesMode;
             notesToggleBtn.classList.toggle('active', notesMode);
+            notesToggleBtn.setAttribute('aria-pressed', notesMode);
             saveSettings();
         });
 
@@ -64,8 +65,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Score tabs
         scoreTabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                scoreTabs.forEach(t => t.classList.remove('active'));
+                const tabId = tab.id;
+                const panelId = tab.getAttribute('aria-controls');
+
+                // Update tab states
+                scoreTabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+
                 tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+
+                // Update the high scores list
+                const highScoresList = document.getElementById('high-scores-list');
+                highScoresList.setAttribute('aria-labelledby', tabId);
+                highScoresList.id = panelId;
+
                 loadHighScores(tab.getAttribute('data-difficulty'));
             });
         });
@@ -133,45 +149,87 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create the 9x9 grid
     function createBoard() {
         gameBoard.innerHTML = '';
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.setAttribute('data-row', row);
-                cell.setAttribute('data-col', col);
 
-                // Create notes container
-                const notesContainer = document.createElement('div');
-                notesContainer.classList.add('notes');
+        // Create row groups for better structure
+        for (let rowGroup = 0; rowGroup < 3; rowGroup++) {
+            const rowGroupElement = document.createElement('div');
+            rowGroupElement.setAttribute('role', 'rowgroup');
+            rowGroupElement.classList.add('row-group');
 
-                // Create 9 spans for notes
-                for (let i = 1; i <= 9; i++) {
-                    const noteSpan = document.createElement('span');
-                    noteSpan.setAttribute('data-note', i);
-                    notesContainer.appendChild(noteSpan);
+            for (let row = rowGroup * 3; row < (rowGroup + 1) * 3; row++) {
+                const rowElement = document.createElement('div');
+                rowElement.setAttribute('role', 'row');
+                rowElement.classList.add('sudoku-row');
+
+                for (let colGroup = 0; colGroup < 3; colGroup++) {
+                    for (let col = colGroup * 3; col < (colGroup + 1) * 3; col++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.setAttribute('data-row', row);
+                        cell.setAttribute('data-col', col);
+                        cell.setAttribute('role', 'gridcell');
+                        cell.setAttribute('tabindex', '0');
+                        cell.setAttribute('aria-label', `Row ${row + 1}, Column ${col + 1}`);
+
+                        // Create notes container
+                        const notesContainer = document.createElement('div');
+                        notesContainer.classList.add('notes');
+                        notesContainer.setAttribute('aria-hidden', 'true');
+
+                        // Create 9 spans for notes
+                        for (let i = 1; i <= 9; i++) {
+                            const noteSpan = document.createElement('span');
+                            noteSpan.setAttribute('data-note', i);
+                            notesContainer.appendChild(noteSpan);
+                        }
+
+                        cell.appendChild(notesContainer);
+
+                        // Add event listeners
+                        cell.addEventListener('click', () => handleCellSelection(cell));
+                        cell.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                handleCellSelection(cell);
+                                e.preventDefault();
+                            }
+                        });
+
+                        rowElement.appendChild(cell);
+                    }
                 }
 
-                cell.appendChild(notesContainer);
+                rowGroupElement.appendChild(rowElement);
+            }
 
-                cell.addEventListener('click', () => {
-                    if (gameActive && !cell.classList.contains('given')) {
-                        // Deselect previous cell
-                        if (selectedCell) {
-                            selectedCell.classList.remove('selected');
-                        }
+            gameBoard.appendChild(rowGroupElement);
+        }
+    }
 
-                        // Select new cell
-                        selectedCell = cell;
-                        cell.classList.add('selected');
+    // Handle cell selection
+    function handleCellSelection(cell) {
+        if (gameActive && !cell.classList.contains('given')) {
+            // Deselect previous cell
+            if (selectedCell) {
+                selectedCell.classList.remove('selected');
+                selectedCell.setAttribute('aria-selected', 'false');
+            }
 
-                        // Highlight same numbers
-                        if (cell.textContent && !notesMode) {
-                            highlightSameNumbers(cell.textContent);
-                        }
-                    }
-                });
+            // Select new cell
+            selectedCell = cell;
+            cell.classList.add('selected');
+            cell.setAttribute('aria-selected', 'true');
 
-                gameBoard.appendChild(cell);
+            // Announce the cell position for screen readers
+            const row = parseInt(cell.getAttribute('data-row'));
+            const col = parseInt(cell.getAttribute('data-col'));
+            const cellValue = board[row][col] !== 0 ? board[row][col] : 'empty';
+
+            // Update aria-label with current value
+            cell.setAttribute('aria-label', `Row ${row + 1}, Column ${col + 1}, ${cellValue}`);
+
+            // Highlight same numbers
+            if (cell.textContent && !notesMode) {
+                highlightSameNumbers(cell.textContent);
             }
         }
     }
@@ -337,16 +395,39 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear previous content
             cell.classList.remove('given', 'selected', 'error', 'same-number');
 
+            // Reset aria attributes
+            cell.setAttribute('aria-selected', 'false');
+
             // Add the main number if it exists
             if (board[row][col] !== 0) {
                 cell.textContent = board[row][col];
                 cell.classList.add('given');
+                cell.setAttribute('aria-readonly', 'true');
+                cell.setAttribute('aria-label', `Row ${row + 1}, Column ${col + 1}, ${board[row][col]}`);
             } else {
                 cell.textContent = '';
+                cell.removeAttribute('aria-readonly');
+                cell.setAttribute('aria-label', `Row ${row + 1}, Column ${col + 1}, empty`);
                 // Render notes for empty cells
                 renderNotes(row, col);
             }
         });
+
+        // Announce game start for screen readers
+        const announcement = document.createElement('div');
+        announcement.setAttribute('role', 'status');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.style.position = 'absolute';
+        announcement.style.width = '1px';
+        announcement.style.height = '1px';
+        announcement.style.overflow = 'hidden';
+        announcement.textContent = `New ${difficulty} game started. Use arrow keys to navigate and number keys to fill cells.`;
+        document.body.appendChild(announcement);
+
+        // Remove announcement after it's read
+        setTimeout(() => {
+            document.body.removeChild(announcement);
+        }, 3000);
     }
 
     // Toggle a note in a cell
@@ -481,14 +562,26 @@ document.addEventListener('DOMContentLoaded', () => {
         darkMode = !darkMode;
         applyDarkMode();
         saveSettings();
+
+        // Announce change for screen readers
+        const message = darkMode ? 'Dark mode enabled' : 'Light mode enabled';
+        announceForScreenReader(message);
     }
 
     // Apply dark mode
     function applyDarkMode() {
         document.body.classList.toggle('dark-mode', darkMode);
-        themeToggleBtn.innerHTML = darkMode ?
-            '<i class="fas fa-sun"></i>' :
-            '<i class="fas fa-moon"></i>';
+
+        // Update button icon and aria-label
+        if (darkMode) {
+            themeToggleBtn.innerHTML = '<i class="fas fa-sun" aria-hidden="true"></i>';
+            themeToggleBtn.setAttribute('aria-label', 'Switch to light mode');
+            themeToggleBtn.setAttribute('title', 'Switch to Light Mode');
+        } else {
+            themeToggleBtn.innerHTML = '<i class="fas fa-moon" aria-hidden="true"></i>';
+            themeToggleBtn.setAttribute('aria-label', 'Switch to dark mode');
+            themeToggleBtn.setAttribute('title', 'Switch to Dark Mode');
+        }
     }
 
     // Toggle sound
@@ -496,13 +589,41 @@ document.addEventListener('DOMContentLoaded', () => {
         soundEnabled = !soundEnabled;
         updateSoundIcon();
         saveSettings();
+
+        // Announce change for screen readers
+        const message = soundEnabled ? 'Sound enabled' : 'Sound muted';
+        announceForScreenReader(message);
     }
 
     // Update sound icon
     function updateSoundIcon() {
-        soundToggleBtn.innerHTML = soundEnabled ?
-            '<i class="fas fa-volume-up"></i>' :
-            '<i class="fas fa-volume-mute"></i>';
+        if (soundEnabled) {
+            soundToggleBtn.innerHTML = '<i class="fas fa-volume-up" aria-hidden="true"></i>';
+            soundToggleBtn.setAttribute('aria-label', 'Mute sound');
+            soundToggleBtn.setAttribute('title', 'Mute Sound');
+        } else {
+            soundToggleBtn.innerHTML = '<i class="fas fa-volume-mute" aria-hidden="true"></i>';
+            soundToggleBtn.setAttribute('aria-label', 'Enable sound');
+            soundToggleBtn.setAttribute('title', 'Enable Sound');
+        }
+    }
+
+    // Announce message for screen readers
+    function announceForScreenReader(message) {
+        const announcement = document.createElement('div');
+        announcement.setAttribute('role', 'status');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.style.position = 'absolute';
+        announcement.style.width = '1px';
+        announcement.style.height = '1px';
+        announcement.style.overflow = 'hidden';
+        announcement.textContent = message;
+        document.body.appendChild(announcement);
+
+        // Remove announcement after it's read
+        setTimeout(() => {
+            document.body.removeChild(announcement);
+        }, 1000);
     }
 
     // Play sound
@@ -765,22 +886,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const settings = {
             darkMode,
             soundEnabled,
-            notesMode
+            notesMode,
+            lastDifficulty: difficulty,
+            timestamp: new Date().toISOString()
         };
-        localStorage.setItem('sudoku-settings', JSON.stringify(settings));
+
+        try {
+            localStorage.setItem('sudoku-settings', JSON.stringify(settings));
+            console.log('Settings saved successfully');
+        } catch (error) {
+            console.error('Error saving settings:', error);
+        }
     }
 
     // Load settings from localStorage
     function loadSettings() {
-        const settings = JSON.parse(localStorage.getItem('sudoku-settings')) || {
-            darkMode: false,
-            soundEnabled: true,
-            notesMode: false
-        };
+        try {
+            const defaultSettings = {
+                darkMode: false,
+                soundEnabled: true,
+                notesMode: false,
+                lastDifficulty: 'easy',
+                timestamp: new Date().toISOString()
+            };
 
-        darkMode = settings.darkMode;
-        soundEnabled = settings.soundEnabled;
-        notesMode = settings.notesMode;
+            const savedSettings = localStorage.getItem('sudoku-settings');
+            const settings = savedSettings ? JSON.parse(savedSettings) : defaultSettings;
+
+            // Apply settings
+            darkMode = settings.darkMode;
+            soundEnabled = settings.soundEnabled;
+            notesMode = settings.notesMode;
+
+            // Set difficulty if available
+            if (settings.lastDifficulty) {
+                difficulty = settings.lastDifficulty;
+                difficultySelect.value = difficulty;
+            }
+
+            // Apply UI states
+            applyDarkMode();
+            updateSoundIcon();
+            notesToggleBtn.classList.toggle('active', notesMode);
+            notesToggleBtn.setAttribute('aria-pressed', notesMode);
+
+            console.log('Settings loaded successfully');
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            // Use defaults if there's an error
+            darkMode = false;
+            soundEnabled = true;
+            notesMode = false;
+        }
     }
 
     // Initialize the game
