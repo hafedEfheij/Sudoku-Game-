@@ -316,6 +316,17 @@ h2 {
     100% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
 }
 
+/* Animation for cell when a number is placed */
+.cell.number-placed {
+    animation: numberPlaced 0.5s var(--transition-function-bounce);
+}
+
+@keyframes numberPlaced {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
 .cell.same-number {
     background-color: var(--cell-same-number-bg);
     animation: fadeBackground 0.5s var(--transition-function);
@@ -769,12 +780,40 @@ h2 {
     to { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+@keyframes flash {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.5; }
+}
+
 .fade-in {
     animation: fadeIn 0.5s var(--transition-function);
 }
 
 .slide-in {
     animation: slideIn 0.5s var(--transition-function);
+}
+
+.rotate {
+    animation: rotate 1s var(--transition-function) infinite;
+}
+
+.bounce {
+    animation: bounce 1s var(--transition-function);
+}
+
+.flash {
+    animation: flash 1s var(--transition-function);
 }
 
 /* Responsive Design */
