@@ -54,9 +54,10 @@
     --container-width-sm: 95%;
     --container-width-md: 500px;
     --container-width-lg: 550px;
-    --game-board-size-sm: 300px;
-    --game-board-size-md: 400px;
-    --game-board-size-lg: 450px;
+    --game-board-size-sm: 280px;
+    --game-board-size-md: 350px;
+    --game-board-size-lg: 400px;
+    --game-board-size-xl: 450px;
 }
 
 .dark-mode {
@@ -105,12 +106,13 @@ body {
     background-color: var(--bg-color);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100%;
-    padding: var(--spacing-md);
+    padding: 0;
     color: var(--text-color);
     line-height: 1.5;
     transition: background-color var(--transition-speed-slow) var(--transition-function);
+    overflow-x: hidden;
 }
 
 .container {
@@ -126,6 +128,8 @@ body {
     margin: 0 auto;
     transition: all var(--transition-speed) var(--transition-function-ease-out);
     animation: fadeIn var(--transition-speed-slow) var(--transition-function-ease-out);
+    overflow-x: hidden;
+    min-height: 100vh;
 }
 
 @keyframes fadeIn {
@@ -223,13 +227,15 @@ h2 {
     border: 2px solid var(--grid-border);
     margin-bottom: var(--spacing-lg);
     width: 100%;
-    max-width: var(--game-board-size-md);
+    max-width: var(--game-board-size-lg);
     aspect-ratio: 1/1;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-radius: var(--border-radius-sm);
     overflow: hidden;
     transition: all var(--transition-speed) var(--transition-function);
     animation: scaleIn var(--transition-speed) var(--transition-function-bounce);
+    margin-left: auto;
+    margin-right: auto;
 }
 
 @keyframes scaleIn {
@@ -259,7 +265,8 @@ h2 {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: var(--font-size-lg);
+    font-size: clamp(1rem, 3vw, var(--font-size-xl));
+    font-weight: 500;
     cursor: pointer;
     user-select: none;
     position: relative;
@@ -888,9 +895,19 @@ h2 {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (min-width: 1200px) {
+    .container {
+        max-width: var(--container-width-lg);
+    }
+
+    .game-board {
+        max-width: var(--game-board-size-xl);
+    }
+}
+
+@media (max-width: 992px) {
     html {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     .container {
@@ -899,7 +916,27 @@ h2 {
     }
 
     .game-board {
+        max-width: var(--game-board-size-lg);
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 15px;
+    }
+
+    .container {
+        max-width: 95%;
+        padding: var(--spacing-md);
+    }
+
+    .game-board {
         max-width: var(--game-board-size-md);
+    }
+
+    .game-options {
+        justify-content: center;
+        gap: var(--spacing-md);
     }
 }
 
@@ -909,8 +946,9 @@ h2 {
     }
 
     .container {
-        max-width: var(--container-width-sm);
-        padding: var(--spacing-md);
+        max-width: 100%;
+        padding: var(--spacing-md) var(--spacing-sm);
+        border-radius: 0;
     }
 
     .game-board {
@@ -951,6 +989,12 @@ h2 {
 
     .score-tabs {
         flex-wrap: wrap;
+        gap: var(--spacing-xs);
+    }
+
+    .score-tab {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-xs) var(--spacing-sm);
     }
 }
 
@@ -959,20 +1003,53 @@ h2 {
         font-size: 12px;
     }
 
+    body {
+        padding: 0;
+    }
+
     .container {
         padding: var(--spacing-sm);
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .game-board {
-        max-width: 280px;
+        max-width: 100%;
     }
 
     h1 {
         font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-sm);
     }
 
-    .cell {
-        font-size: var(--font-size-md);
+    .cell .notes {
+        font-size: 0.6rem;
+    }
+
+    .high-scores {
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+    }
+}
+
+/* Portrait orientation on mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+    .container {
+        padding: var(--spacing-sm);
+    }
+
+    h1 {
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .game-board {
+        max-width: 80vh;
+        max-height: 80vh;
+    }
+
+    .high-scores {
+        display: none;
     }
 }
 
