@@ -632,12 +632,29 @@ h2 {
     height: auto;
     padding: var(--spacing-md);
     margin-top: var(--spacing-md);
-    animation: slideDown var(--transition-speed) var(--transition-function);
+    animation: slideDown var(--transition-speed) var(--transition-function-ease-out);
+    position: relative;
+}
+
+.message:not(:empty)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: currentColor;
+    animation: progressBar 3s var(--transition-function-ease-in) forwards;
 }
 
 @keyframes slideDown {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes progressBar {
+    from { width: 0; }
+    to { width: 100%; }
 }
 
 .message.success {
@@ -716,6 +733,21 @@ h2 {
     color: var(--primary-button-text);
     border-color: var(--primary-button-bg);
     animation: tabActivate 0.3s var(--transition-function-bounce);
+    position: relative;
+}
+
+.score-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--primary-button-bg);
+    animation: fadeIn 0.3s var(--transition-function-ease-out) forwards;
 }
 
 @keyframes tabActivate {
