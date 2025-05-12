@@ -66,16 +66,64 @@
 
         <div id="message" class="message" role="status" aria-live="polite"></div>
 
-        <div class="high-scores">
-            <h2 id="high-scores-heading">High Scores</h2>
-            <div class="score-tabs" role="tablist" aria-labelledby="high-scores-heading">
-                <button class="score-tab active" id="tab-easy" role="tab" aria-selected="true" aria-controls="panel-easy" data-difficulty="easy">Easy</button>
-                <button class="score-tab" id="tab-medium" role="tab" aria-selected="false" aria-controls="panel-medium" data-difficulty="medium">Medium</button>
-                <button class="score-tab" id="tab-hard" role="tab" aria-selected="false" aria-controls="panel-hard" data-difficulty="hard">Hard</button>
+        <div class="stats-and-scores">
+            <div class="section-tabs" role="tablist">
+                <button class="section-tab active" id="tab-scores" role="tab" aria-selected="true" aria-controls="panel-scores">High Scores</button>
+                <button class="section-tab" id="tab-stats" role="tab" aria-selected="false" aria-controls="panel-stats">Statistics</button>
             </div>
-            <div class="score-list" id="high-scores-list" role="tabpanel" aria-labelledby="tab-easy" id="panel-easy">
-                <!-- High scores will be populated by JavaScript -->
-                <div class="no-scores">No scores yet. Complete a game to set a record!</div>
+
+            <div class="tab-content">
+                <div id="panel-scores" role="tabpanel" aria-labelledby="tab-scores" class="panel active">
+                    <h2 id="high-scores-heading">High Scores</h2>
+                    <div class="score-tabs" role="tablist" aria-labelledby="high-scores-heading">
+                        <button class="score-tab active" id="tab-easy" role="tab" aria-selected="true" aria-controls="panel-easy" data-difficulty="easy">Easy</button>
+                        <button class="score-tab" id="tab-medium" role="tab" aria-selected="false" aria-controls="panel-medium" data-difficulty="medium">Medium</button>
+                        <button class="score-tab" id="tab-hard" role="tab" aria-selected="false" aria-controls="panel-hard" data-difficulty="hard">Hard</button>
+                    </div>
+                    <div class="score-list" id="high-scores-list" role="tabpanel" aria-labelledby="tab-easy" id="panel-easy">
+                        <!-- High scores will be populated by JavaScript -->
+                        <div class="no-scores">No scores yet. Complete a game to set a record!</div>
+                    </div>
+                </div>
+
+                <div id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" class="panel">
+                    <h2 id="stats-heading">Game Statistics</h2>
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-title">Games Played</div>
+                            <div class="stat-value" id="stat-games-played">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Games Won</div>
+                            <div class="stat-value" id="stat-games-won">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Win Rate</div>
+                            <div class="stat-value" id="stat-win-rate">0%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Average Time</div>
+                            <div class="stat-value" id="stat-avg-time">00:00</div>
+                        </div>
+                    </div>
+                    <div class="stats-chart">
+                        <h3>Difficulty Distribution</h3>
+                        <div class="chart-container" id="difficulty-chart">
+                            <div class="chart-bar" data-difficulty="easy">
+                                <div class="bar-fill" style="height: 0%"></div>
+                                <div class="bar-label">Easy</div>
+                            </div>
+                            <div class="chart-bar" data-difficulty="medium">
+                                <div class="bar-fill" style="height: 0%"></div>
+                                <div class="bar-label">Medium</div>
+                            </div>
+                            <div class="chart-bar" data-difficulty="hard">
+                                <div class="bar-fill" style="height: 0%"></div>
+                                <div class="bar-label">Hard</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

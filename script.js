@@ -12,6 +12,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let soundEnabled = true;
     let darkMode = false;
 
+    // Statistics variables
+    let gameStats = {
+        gamesPlayed: 0,
+        gamesWon: 0,
+        totalTime: 0,
+        difficultyCount: {
+            easy: 0,
+            medium: 0,
+            hard: 0
+        }
+    };
+
     // DOM elements
     const gameBoard = document.getElementById('game-board');
     const timerElement = document.getElementById('timer');
@@ -26,6 +38,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const soundToggleBtn = document.getElementById('sound-toggle-btn');
     const highScoresList = document.getElementById('high-scores-list');
     const scoreTabs = document.querySelectorAll('.score-tab');
+    const sectionTabs = document.querySelectorAll('.section-tab');
+    const panels = document.querySelectorAll('.panel');
+
+    // Statistics DOM elements
+    const statGamesPlayed = document.getElementById('stat-games-played');
+    const statGamesWon = document.getElementById('stat-games-won');
+    const statWinRate = document.getElementById('stat-win-rate');
+    const statAvgTime = document.getElementById('stat-avg-time');
+    const difficultyChart = document.getElementById('difficulty-chart');
 
     // Sound elements
     const placeSound = document.getElementById('place-sound');
@@ -37,6 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
         createBoard();
         loadSettings();
         loadHighScores();
+        loadGameStats();
+        updateStatsDisplay();
 
         // Set up event listeners
         difficultySelect.addEventListener('change', (e) => {
@@ -61,6 +84,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Sound toggle
         soundToggleBtn.addEventListener('click', toggleSound);
+
+        // Section tabs (High Scores / Statistics)
+        sectionTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.id;
+                const panelId = tab.getAttribute('aria-controls');
+
+                // Update tab states
+                sectionTabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+
+                // Update panel visibility
+                panels.forEach(panel => {
+                    panel.classList.remove('active');
+                });
+
+                document.getElementById(panelId).classList.add('active');
+            });
+        });
 
         // Score tabs
         scoreTabs.forEach(tab => {
@@ -236,6 +283,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start a new game
     function startNewGame() {
+        // If there's an active game, count it as abandoned (not won)
+        if (gameActive) {
+            updateGameStats(false, seconds);
+        }
+
         resetBoard();
         generatePuzzle();
         renderBoard();
@@ -243,6 +295,12 @@ document.addEventListener('DOMContentLoaded', () => {
         gameActive = true;
         messageElement.textContent = '';
         messageElement.className = 'message';
+
+        // Update difficulty count for statistics
+        gameStats.difficultyCount[difficulty]++;
+        gameStats.gamesPlayed++;
+        saveGameStats();
+        updateStatsDisplay();
 
         // Apply settings
         applyDarkMode();
@@ -674,6 +732,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add to high scores
         addHighScore(difficulty, seconds - 1);
 
+        // Update game statistics
+        updateGameStats(true, seconds - 1);
+
         // Show animation
         const cells = document.querySelectorAll('.cell');
         cells.forEach((cell, index) => {
@@ -937,6 +998,91 @@ document.addEventListener('DOMContentLoaded', () => {
             darkMode = false;
             soundEnabled = true;
             notesMode = false;
+        }
+    }
+
+    // Update game statistics
+    function updateGameStats(won, gameTime) {
+        if (won) {
+            gameStats.gamesWon++;
+            gameStats.totalTime += gameTime;
+        }
+        saveGameStats();
+        updateStatsDisplay();
+    }
+
+    // Save game statistics to localStorage
+    function saveGameStats() {
+        try {
+            localStorage.setItem('sudoku-stats', JSON.stringify(gameStats));
+            console.log('Game statistics saved successfully');
+        } catch (error) {
+            console.error('Error saving game statistics:', error);
+        }
+    }
+
+    // Load game statistics from localStorage
+    function loadGameStats() {
+        try {
+            const savedStats = localStorage.getItem('sudoku-stats');
+            if (savedStats) {
+                gameStats = JSON.parse(savedStats);
+                console.log('Game statistics loaded successfully');
+            }
+        } catch (error) {
+            console.error('Error loading game statistics:', error);
+            // Use default stats if there's an error
+            gameStats = {
+                gamesPlayed: 0,
+                gamesWon: 0,
+                totalTime: 0,
+                difficultyCount: {
+                    easy: 0,
+                    medium: 0,
+                    hard: 0
+                }
+            };
+        }
+    }
+
+    // Update statistics display
+    function updateStatsDisplay() {
+        // Update basic stats
+        statGamesPlayed.textContent = gameStats.gamesPlayed;
+        statGamesWon.textContent = gameStats.gamesWon;
+
+        // Calculate and update win rate
+        const winRate = gameStats.gamesPlayed > 0 ?
+            Math.round((gameStats.gamesWon / gameStats.gamesPlayed) * 100) : 0;
+        statWinRate.textContent = `${winRate}%`;
+
+        // Calculate and update average time
+        const avgTime = gameStats.gamesWon > 0 ?
+            Math.round(gameStats.totalTime / gameStats.gamesWon) : 0;
+        statAvgTime.textContent = formatTime(avgTime);
+
+        // Update difficulty distribution chart
+        updateDifficultyChart();
+    }
+
+    // Update the difficulty distribution chart
+    function updateDifficultyChart() {
+        const total = gameStats.difficultyCount.easy +
+                     gameStats.difficultyCount.medium +
+                     gameStats.difficultyCount.hard;
+
+        if (total > 0) {
+            const easyPercent = Math.round((gameStats.difficultyCount.easy / total) * 100);
+            const mediumPercent = Math.round((gameStats.difficultyCount.medium / total) * 100);
+            const hardPercent = Math.round((gameStats.difficultyCount.hard / total) * 100);
+
+            const easyBar = difficultyChart.querySelector('[data-difficulty="easy"] .bar-fill');
+            const mediumBar = difficultyChart.querySelector('[data-difficulty="medium"] .bar-fill');
+            const hardBar = difficultyChart.querySelector('[data-difficulty="hard"] .bar-fill');
+
+            easyBar.style.height = `${easyPercent}%`;
+            mediumBar.style.height = `${mediumPercent}%`;
+            hardBar.style.height = `${hardPercent}%`;
         }
     }
 
