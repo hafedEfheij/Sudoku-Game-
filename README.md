@@ -2,7 +2,6 @@
 
 A modern, feature-rich Sudoku game built with HTML, CSS, and JavaScript. Play online with a beautiful interface that works on all devices.
 
-![Sudoku Game Screenshot](https://user-images.githubusercontent.com/74829200/175786701-f6a7a0f4-cb0c-4f4a-b7e7-8a6a6c4a3a9d.png)
 
 ## Live Demo
 
