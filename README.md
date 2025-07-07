@@ -1,4 +1,4 @@
-# Sudoku Game
+# Sudoku Game...
 
 A modern, feature-rich Sudoku game built with HTML, CSS, and JavaScript. Play online with a beautiful interface that works on all devices.
 
